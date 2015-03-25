@@ -31,7 +31,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 	public function __construct(array $queryMaps = array())
 	{
 		if(empty($queryMaps)) {
-			$queryMaps = array('condition' => 'q', 'order' => 'order');
+			$queryMaps = array('q' => 'condition', 'order' => 'order');
 		}
 		parent::__construct($queryMaps);
 	}

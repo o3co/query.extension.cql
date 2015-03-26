@@ -7,6 +7,8 @@ use O3Co\Query\Parser as ParserInterface,
 	O3Co\Query\Fql\Parser as FqlParserInterface
 ;
 
+use O3Co\Query\Exception\ParserException;
+
 /**
  * Parser 
  *    Parse Query string to Simple Expressions.
@@ -107,7 +109,17 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 			// 
 			$lexer = $this->createLexer((string)$query);
 			
-			return $this->parseExpression($lexer, $field);
+            try {
+			    $expr = $this->parseExpression($lexer, $field);
+            } catch(\Exception $ex) {
+                throw new ParserException(sprintf('Failed to parse qeury "%s"', $query), 0, $ex);
+            }
+
+            if(!$lexer->isEol()) {
+                throw new ParserException(sprintf('Invalid query "%s"', $lexer->remain()));
+            }
+
+            return $expr;
 		} else if(is_array($query)) {
 			$exprs = array();
 			foreach($query as $q) {
@@ -120,7 +132,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 			return new Term\ComparisonExpression($field, $query, Term\ComparisonExpression::EQ);
 		}
 
-		throw new \Exception('Invalid Fql query.');
+		throw new ParserException('Invalid Fql query.');
 	}
 
 	protected function parseExpression(Lexer $lexer, $field = null, $canGuessOp = true)
@@ -150,9 +162,9 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 			return $this->parseComparisonExpression($lexer, $field);
 		} else if($field && $canGuessOp) {
 			return new Term\ComparisonExpression($field, $this->parseValueExpression($lexer), Term\ComparisonExpression::EQ);
-		}
-
-		throw new \InvalidArgumentException('Field is not specified for Expression.');
+		} else {
+		    throw new \InvalidArgumentException('Field is not specified for Expression.');
+        }
 	}
 
 	protected function parseLogicalExpression($lexer, $field = null)

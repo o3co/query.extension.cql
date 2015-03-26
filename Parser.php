@@ -21,21 +21,6 @@ use O3Co\Query\Parser as ParserInterface,
  */
 class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInterface
 {
-    /**
-     * __construct 
-     * 
-     * @param array $queryMaps 
-     * @access public
-     * @return void
-     */
-	public function __construct(array $queryMaps = array())
-	{
-		if(empty($queryMaps)) {
-			$queryMaps = array('q' => 'condition', 'order' => 'order');
-		}
-		parent::__construct($queryMaps);
-	}
-
 	/**
 	 * parseClause 
 	 * 
@@ -51,11 +36,25 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 			return $this->parseConditionalClause($lexer);
 		case 'order':
 			return $this->parseOrderClause($lexer);
+		case 'limit':
+			return $this->parseLimitClause($lexer);
+		case 'offset':
+			return $this->parseOffsetClause($lexer);
 		default:
 			throw new UnsupportedException(sprintf('Clause "%s" is not defined on CQL.', $alias));
 			break;
 		}
 	}
+
+    public function parseLimitClause($lexer)
+    {
+        return new Term\LimitClause($this->parseValueExpresion($lexer));
+    }
+
+    public function parseOffsetClause($lexer)
+    {
+        return new Term\OffsetClause($this->parseValueExpresion($lexer));
+    }
 
 	public function parseConditionalClause($lexer)
 	{

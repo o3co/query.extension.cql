@@ -148,7 +148,9 @@ class ParserTest extends \PHPUnit_Framework_TestCase
 		$parser = new Parser(); 
 
 		// Test Simple Value fql
-		$stmt = $parser->parse('q=domain.field:=:foo&order=-field');
+		$query = $parser->parse('q=domain.field:=:foo&order=-field');
+		$this->assertInstanceof('O3Co\Query\Query', $query);
+        $stmt = $query->getStatement();
 		$this->assertInstanceof('O3Co\Query\Query\Term\Statement', $stmt);
 
 		$expr = $stmt->getClause('condition')->getTerms()[0];
@@ -158,8 +160,9 @@ class ParserTest extends \PHPUnit_Framework_TestCase
 
 
 		// Complex Query
-		$stmt = $parser->parse('q=and:(domain.field:=:foo bar:!=:bar)');
-		
+		$query = $parser->parse('q=and:(domain.field:=:foo bar:!=:bar)');
+		$this->assertInstanceof('O3Co\Query\Query', $query);
+        $stmt = $query->getStatement();
 		$this->assertInstanceof('O3Co\Query\Query\Term\Statement', $stmt);
 
 		$exprs = $stmt->getClause('condition')->getTerms();

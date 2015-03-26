@@ -138,9 +138,11 @@ class ParserTest extends \PHPUnit_Framework_TestCase
 		$this->assertContains(3, $values);
 
 
-
-		// exception occured, cause fql not support to have field
+        // or:(1 2 3)
 		$expr = $parser->parseFql('field', 'field:=:abc');
+        $this->assertInstanceof('O3Co\Query\Query\Term\ComparisonExpression', $expr);
+
+        $expr = $parser->parseFql('field', 'or:(and:(>=:1 <:20) >:200)');
 	}
 
 	public function testParse()

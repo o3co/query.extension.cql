@@ -20,5 +20,30 @@ class LexerTest extends \PHPUnit_Framework_TestCase
 
 	}
 
+    public function testUntil()
+    {
+        $lexer = new Lexer('foo and bar "string\"end".');
+
+        $this->assertEquals('foo and bar ', $lexer->until(Tokens::T_DOUBLE_QUOTE));
+        $lexer->match(Tokens::T_DOUBLE_QUOTE);
+        $this->assertEquals('string\"end', $lexer->until(Tokens::T_DOUBLE_QUOTE));
+        $lexer->match(Tokens::T_DOUBLE_QUOTE);
+
+        $lexer = new Lexer('((abc def) (ghi))');
+        $this->assertEquals('(', $lexer->match(Tokens::T_COMPOSITE_BEGIN));
+        $this->assertEquals('(', $lexer->match(Tokens::T_COMPOSITE_BEGIN));
+        $this->assertEquals('abc', $lexer->until(array(Tokens::T_COMPOSITE_END, Tokens::T_COMPOSITE_SEPARATOR)));
+        $this->assertEquals(' ', $lexer->match(Tokens::T_COMPOSITE_SEPARATOR));
+        $this->assertEquals('def', $lexer->until(array(Tokens::T_COMPOSITE_END, Tokens::T_COMPOSITE_SEPARATOR)));
+        $this->assertEquals(')', $lexer->match(Tokens::T_COMPOSITE_END));
+        $this->assertEquals(' ', $lexer->match(Tokens::T_COMPOSITE_SEPARATOR));
+        $this->assertEquals('(', $lexer->match(Tokens::T_COMPOSITE_BEGIN));
+        $this->assertEquals('ghi', $lexer->until(array(Tokens::T_COMPOSITE_END, Tokens::T_COMPOSITE_SEPARATOR)));
+        $this->assertEquals(')', $lexer->match(Tokens::T_COMPOSITE_END));
+        $this->assertEquals(')', $lexer->match(Tokens::T_COMPOSITE_END));
+
+        $this->assertTrue($lexer->isEol());
+    }
+
 }
 

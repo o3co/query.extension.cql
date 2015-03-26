@@ -135,7 +135,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 		throw new ParserException('Invalid Fql query.');
 	}
 
-	protected function parseExpression(Lexer $lexer, $field = null, $canGuessOp = true)
+	protected function parseExpression(Lexer $lexer, $field = null, $eqWithNoOp = true)
 	{
 		if(!$field) {
 			try {
@@ -160,8 +160,11 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 			return $this->parseLogicalExpression($lexer, $field);
 		} else if($lexer->isNextToken(Tokens::T_COMPARISON_OP)) {
 			return $this->parseComparisonExpression($lexer, $field);
-		} else if($field && $canGuessOp) {
-			return new Term\ComparisonExpression($field, $this->parseValueExpression($lexer), Term\ComparisonExpression::EQ);
+		} else if($field) {
+            if($eqWithNoOp) {
+			    return new Term\ComparisonExpression($field, $this->parseValueExpression($lexer), Term\ComparisonExpression::EQ);
+            }
+            throw new \InvalidArgumentException(sprintf('Invalid format query "%s"', $lexer->getValue()));
 		} else {
 		    throw new \InvalidArgumentException('Field is not specified for Expression.');
         }
@@ -201,18 +204,30 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 	protected function parseCompositeExpression($lexer, $field = null)
 	{
 		$lexer->match(Tokens::T_COMPOSITE_BEGIN);
+        $depth = 1;
 
 		$exprs = array();
 		do {
-			$lex = $lexer->until(Tokens::T_COMPOSITE_END, Tokens::T_COMPOSITE_SEPARATOR);
-			$exprs[] = $this->parseExpression($this->createLexer($lex, $lexer->getLiterals()), $field);
+            switch(true) {
+            case $lexer->isNextToken(Tokens::T_LOGICAL_OP):
+                // parse next level first
+                $exprs[] = $this->parseExpression($lexer, $field);
+                break;
+            default:
+			    $literals = $lexer->until(array(Tokens::T_COMPOSITE_END, Tokens::T_COMPOSITE_SEPARATOR));
+                
+			    $exprs[] = $this->parseExpression($this->createLexer($literals, $lexer->getLiterals()), $field);
 
-			if($lexer->isNextToken(Tokens::T_COMPOSITE_SEPARATOR)) {
-				$lexer->match(Tokens::T_COMPOSITE_SEPARATOR);
-			}
-		} while(!$lexer->isNextToken(Tokens::T_COMPOSITE_END));
+			    if($lexer->isNextToken(Tokens::T_COMPOSITE_SEPARATOR)) {
+			    	$lexer->match(Tokens::T_COMPOSITE_SEPARATOR);
+                    continue;
+			    }
+                break;
+            }
 
-		$lexer->match(Tokens::T_COMPOSITE_END);
+        } while(!$lexer->isNextToken(Tokens::T_COMPOSITE_END));
+        
+        $lexer->match(Tokens::T_COMPOSITE_END);
 
 		return $exprs;
 	}
@@ -288,9 +303,9 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 		return new Term\ValueExpression($this->parseLiteral($lexer));
 	}
 
-    protected function parseLiteral(Lexer $lexer, $until = null)
+    protected function parseLiteral(Lexer $lexer, array $until = array())
     {
-        if($until) {
+        if(!empty($until)) {
             return $lexer->getLiterals()->unescape($lexer->until($until));
         }
         return $lexer->getLiterals()->unescape($lexer->remain());
@@ -308,12 +323,12 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 			throw new \Exception('Parser error');
 		}
 
-		$value = $this->parseLiteral($lexer, Tokens::T_RANGE_SEPARATOR);
+		$value = $this->parseLiteral($lexer, array(Tokens::T_RANGE_SEPARATOR));
 		$min = new Term\ComparisonExpression($field, new Term\ValueExpression($value), $this->convertTokenToComparisonOp($op)); 
 
 		$lexer->match(Tokens::T_RANGE_SEPARATOR);
 
-		$value = $lexer->until(Tokens::T_RANGE_LT, Tokens::T_RANGE_LE);
+		$value = $lexer->until(array(Tokens::T_RANGE_LT, Tokens::T_RANGE_LE));
 
 		if($lexer->isNextToken(Tokens::T_RANGE_LT)) {
 			$lexer->match(Tokens::T_RANGE_LT);
@@ -337,7 +352,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 		$values = array();
 		while(!$lexer->isNextToken(Tokens::T_COLLECTION_END)) {
 			//
-			$lex = $lexer->until(Tokens::T_COLLECTION_SEPARATOR, Tokens::T_COLLECTION_END);
+			$lex = $lexer->until(array(Tokens::T_COLLECTION_SEPARATOR, Tokens::T_COLLECTION_END));
 
 			$values[] = $this->parseLiteral($this->createLexer($lex));
 

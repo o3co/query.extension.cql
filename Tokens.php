@@ -24,6 +24,8 @@ class Tokens
 	const T_SINGLE_QUOTE              = 51;
 	const T_DOUBLE_QUOTE              = 52;
 
+    const T_DOT                       = 53;
+
 	// Operator Tokens
 	const T_OPERATOR                  = 100;
 	// Operator Tokens - Logical Expression

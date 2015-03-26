@@ -248,9 +248,13 @@ class Lexer
 	 * @access public
 	 * @return void
 	 */
-	public function until()
+	public function until($tokens)
 	{
-	    $tokens = func_get_args();
+        $tokens = (array)$tokens;
+
+        if(empty($tokens)) {
+            throw new \InvalidArgumentException('$tokens is not specified.');
+        }
 
 		$startAt = $this->pos;
 
@@ -259,16 +263,18 @@ class Lexer
 	    while($this->pos < $this->len) {
 			$isReached = false;
 
-			if(!$isEscaped && $this->isNextToken(Tokens::T_ESCAPE)) {
+			if(!$isEscaped && $this->isNextToken(Tokens::T_ESCAPE, false)) {
 				// if escape symbol is given then flag escape, and go next
 				$isEscaped = true;
+                $this->pos++;
 				continue;
 			}
 
 			if(!$inQuote) {
 		    	foreach($tokens as $token) {
-		    		if($this->isNextToken($token)) {
+		    		if($this->isNextToken($token, false)) {
 	   					$isReached = true;
+                        break;
 	   				}
 	    		}
 
@@ -277,13 +283,20 @@ class Lexer
 				}
 			}
 
-			if(!$isEscaped && $this->isNextToken(Tokens::T_QUOTE)) {
+			if(!$isEscaped && $this->isNextToken(Tokens::T_QUOTE, false)) {
 				$inQuote = !$inQuote;
 			}
 
 			$isEscaped = false;
 			$this->pos++;
 		}
+
+        if($this->pos >= $this->len) {
+            var_dump($this->value, $this->pos, $this->len, $startAt);
+
+            throw new \InvalidArgumentException('EOL reached.');
+        }
+
 
 		return substr($this->value, $startAt, $this->pos - $startAt);
 	}
@@ -338,6 +351,19 @@ class Lexer
 
 		return $nextToken;
 	}
+
+    public function substr($offset, $len = null)
+    {
+        if($offset > $this->len) {
+            throw new \OutOfRangeException('$offset is over the length');    
+        }
+
+        if($this->len < ($offset + $len)) {
+            // 
+            $len = null;
+        }
+        return substr($this->value, $offset, $len);
+    }
 
 }
 

@@ -113,6 +113,10 @@ class Literals
 	public function getLiteralForToken($token, array $options = array())
 	{
 		switch($token) {
+		case Tokens::T_WHITESPACE:
+			return self::L_SPACE;
+        case Tokens::T_DOT:
+            return self::L_DOT;
 		case Tokens::T_OPERATOR_SEPARATOR:
 			return self::L_COLON;
 		case Tokens::T_OR:

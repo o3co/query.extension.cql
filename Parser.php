@@ -349,21 +349,35 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 	{
 		$lexer->match(Tokens::T_COLLECTION_BEGIN);
 
-		$values = array();
-		while(!$lexer->isNextToken(Tokens::T_COLLECTION_END)) {
-			//
-			$lex = $lexer->until(array(Tokens::T_COLLECTION_SEPARATOR, Tokens::T_COLLECTION_END));
+        $depth = 1;
+		$values = array(1 => array());
 
-			$values[] = $this->parseLiteral($this->createLexer($lex));
+        do {
+            if($lexer->isNextToken(Tokens::T_COLLECTION_BEGIN)) {
+                $depth++;
+                $lexer->match(Tokens::T_COLLECTION_BEGIN);
+                $values[$depth] = array();
+                continue;
+            } else if($lexer->isNextToken(Tokens::T_COLLECTION_END)) {
+                $depth--;
+                $lexer->match(Tokens::T_COLLECTION_END);
 
-			if($lexer->isNextToken(Tokens::T_COLLECTION_SEPARATOR)) {
+                if(0 == $depth) {
+                    break;
+                }
+                // merge closed level values into upper level 
+                $values[$depth][] = $values[$depth + 1];
+            } else if($lexer->isNextToken(Tokens::T_COLLECTION_SEPARATOR)) {
 				$lexer->match(Tokens::T_COLLECTION_SEPARATOR);
 			}
-		}
+			//
+			$literal = $lexer->until(array(Tokens::T_COLLECTION_SEPARATOR, Tokens::T_COLLECTION_END));
 
-		$lexer->match(Tokens::T_COLLECTION_END);
+			$values[$depth][] = $this->parseLiteral($this->createLexer($literal));
 
-		return $values;
+		} while(!$lexer->isEol());
+
+		return $values[1];
 	}
 
 	protected function convertTokenToComparisonOp($token)

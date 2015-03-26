@@ -183,8 +183,6 @@ class ParserTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals('bar', $expr->getField());
 		$this->assertEquals('bar', $expr->getValue()->getValue());
 		$this->assertEquals(ComparisonExpression::NEQ, $expr->getOperator());
-
 	}
-
 }
 

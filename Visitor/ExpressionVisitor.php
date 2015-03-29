@@ -38,7 +38,7 @@ class ExpressionVisitor extends BaseVisitor
 
 		// apply
         $this->queryComponents['q'] = $this->visitConditionalClause($statement->getClause('condition'));
-        // $this->queryComponents['order'] = $this->visitOrderClause($statement->getClause('order'));
+        $this->queryComponents['order'] = $this->visitOrderClause($statement->getClause('order'));
 	}
 
 	public function visitConditionalClause(Term\ConditionalClause $clause)
@@ -103,7 +103,7 @@ class ExpressionVisitor extends BaseVisitor
     public function visitComparisonExpression(Term\ComparisonExpression $expr) 
     {
         $field = $expr->getField();
-        $value = $this->visitValueExpression($expr->getValue());
+        $value = $this->visitValueIdentifier($expr->getValue());
         
         switch($expr->getOperator()) {
         case Term\ComparisonExpression::EQ:
@@ -133,7 +133,7 @@ class ExpressionVisitor extends BaseVisitor
     public function visitTextComparisonExpression(Term\TextComparisonExpression $textComparison)
     {
         $field = $expr->getField();
-        $value = $this->visitValueExpression($textComparison->getValue());
+        $value = $this->visitValueIdentifier($textComparison->getValue());
 
         switch($textComparison->getOperator()) {
         case Term\TextComparisonExpression::MATCH:
@@ -150,7 +150,7 @@ class ExpressionVisitor extends BaseVisitor
     public function visitCollectionComparisonExpression(Term\CollectionComparisonExpression $comparison)
     {
         $field = $expr->getField();
-        $value = (array)$this->visitValueExpression($comparison->getValue());
+        $value = (array)$this->visitValueIdentifier($comparison->getValue());
 
         switch($comparison->getOperator()) {
         case Term\CollectionComparisonExpression::IN:
@@ -175,13 +175,13 @@ class ExpressionVisitor extends BaseVisitor
     }
 
     /**
-     * visitValueExpression 
+     * visitValueIdentifier 
      * 
-     * @param Term\ValueExpression $expr 
+     * @param Term\ValueIdentifier $expr 
      * @access public
      * @return void
      */
-    public function visitValueExpression(Term\ValueExpression $expr)
+    public function visitValueIdentifier(Term\ValueIdentifier $expr)
     {
         return Literals::escape($expr->getValue());
     }

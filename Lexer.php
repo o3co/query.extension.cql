@@ -144,10 +144,12 @@ class Lexer
 	 */
 	public function isNextToken($token, $ignoreSpaces = true)
 	{
-		if($this->pos >= $this->len) {
-			return $token === Tokens::T_END;
-		}
+        if($this->pos >= $this->len) {
+            return Tokens::T_END == $token;
+        }
 		switch($token) {
+        case Tokens::T_END:
+            return false;
 		case Tokens::T_OPERATOR:
 			return 
 					$this->isNextToken(Tokens::T_LOGICAL_OP, $ignoreSpaces) ||
@@ -291,8 +293,9 @@ class Lexer
 			$this->pos++;
 		}
 
-        if($this->pos >= $this->len) {
+        if($this->pos > $this->len) {
             var_dump($this->value, $this->pos, $this->len, $startAt);
+            var_dump($tokens);
 
             throw new \InvalidArgumentException('EOL reached.');
         }

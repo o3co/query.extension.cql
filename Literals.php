@@ -180,10 +180,16 @@ class Literals
 		case Tokens::T_IN:
 			return self::L_IN;
 
+        // Sorting Literals
+        // "+" as asc
+        // "-" as desc
+        // "," as delimiter of the orders 
 		case Tokens::T_SORT_ASC:
 			return self::L_PLUS;
 		case Tokens::T_SORT_DESC:
 			return self::L_MINUS;
+		case Tokens::T_SORT_SEPARATOR:
+			return self::L_COMMA;
 		default:
 			break;
 		}

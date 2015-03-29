@@ -66,8 +66,8 @@ class Tokens
 	const T_RANGE_LE                  = 234;
 	const T_RANGE_SEPARATOR           = 235;
 
-
 	const T_SORT_ASC                  = 501;
 	const T_SORT_DESC                 = 502;
+	const T_SORT_SEPARATOR            = 503;
 }
 

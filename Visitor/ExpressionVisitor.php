@@ -41,7 +41,7 @@ class ExpressionVisitor extends BaseVisitor
         $this->queryComponents['order'] = $this->visitOrderClause($statement->getClause('order'));
     }
 
-    public function visitConditionalClause(Part\ConditionalClause $clause)
+    public function visitConditionalClause(Expr\ConditionalClause $clause)
     {
         foreach($clause->getParts() as $term) {
             $terms[] = $term->dispatch($this);
@@ -50,7 +50,7 @@ class ExpressionVisitor extends BaseVisitor
         return implode(' ', $terms);
     }
 
-    public function visitOrderClause(Part\OrderClause $clause)
+    public function visitOrderClause(Expr\OrderClause $clause)
     {
         $exprs = array();
         foreach($clause->getExpressions() as $expr) {
@@ -62,11 +62,11 @@ class ExpressionVisitor extends BaseVisitor
     /**
      * visitLogicalExpression 
      * 
-     * @param Part\LogicalExpression $expr 
+     * @param Expr\LogicalExpression $expr 
      * @access public
      * @return void
      */
-    public function visitLogicalExpression(Part\LogicalExpression $expr)
+    public function visitLogicalExpression(Expr\LogicalExpression $expr)
     {
         $exprs = array();
         foreach($expr->getExpressions() as $innerExpr) {
@@ -74,7 +74,7 @@ class ExpressionVisitor extends BaseVisitor
         }
 
         switch($expr->getType()) {
-        case Part\LogicalExpression::TYPE_AND:
+        case Expr\LogicalExpression::TYPE_AND:
             if(1 >= count($exprs)) {
                 return implode(' ', $exprs);
             }
@@ -82,7 +82,7 @@ class ExpressionVisitor extends BaseVisitor
                 Literals::L_PARENTHESIS_OPEN . 
                 implode(' ', $exprs) .
                 Literals::L_PARENTHESIS_CLOSE ;
-        case Part\LogicalExpression::TYPE_OR:
+        case Expr\LogicalExpression::TYPE_OR:
             if(1 >= count($exprs)) {
                 return implode(' ', $exprs);
             }
@@ -90,7 +90,7 @@ class ExpressionVisitor extends BaseVisitor
                 Literals::L_PARENTHESIS_OPEN . 
                 implode(' ', $exprs) .
                 Literals::L_PARENTHESIS_CLOSE ;
-        case Part\LogicalExpression::TYPE_NOT:
+        case Expr\LogicalExpression::TYPE_NOT:
             return Literals::L_NOT . Literals::L_COLON . 
                 Literals::L_PARENTHESIS_OPEN . 
                 implode(' ', $exprs) .
@@ -100,29 +100,29 @@ class ExpressionVisitor extends BaseVisitor
         }
     }
 
-    public function visitComparisonExpression(Part\ComparisonExpression $expr) 
+    public function visitComparisonExpression(Expr\ComparisonExpression $expr) 
     {
         $field = $expr->getField();
         $value = $this->visitValueIdentifier($expr->getValue());
         
         switch($expr->getOperator()) {
-        case Part\ComparisonExpression::EQ:
+        case Expr\ComparisonExpression::EQ:
             if(null === $value) {
                 return $field . Literals::L_COLON . Literals::L_NULL;
             }
             return $field . Literals::L_COLON . Literals::L_EQ . Literals::L_COLON . $value;
-        case Part\ComparisonExpression::NEQ:
+        case Expr\ComparisonExpression::NEQ:
             if(null === $value) {
                 return $field . Literals::L_COLON . Literals::L_ANY;
             }
             return $field . Literals::L_COLON . Literals::L_NE . Literals::L_COLON . $value;
-        case Part\ComparisonExpression::GT:
+        case Expr\ComparisonExpression::GT:
             return $field . Literals::L_COLON . Literals::L_GT . Literals::L_COLON . $value;
-        case Part\ComparisonExpression::GTE:
+        case Expr\ComparisonExpression::GTE:
             return $field . Literals::L_COLON . Literals::L_GE . Literals::L_COLON . $value;
-        case Part\ComparisonExpression::LT:
+        case Expr\ComparisonExpression::LT:
             return $field . Literals::L_COLON . Literals::L_LT . Literals::L_COLON . $value;
-        case Part\ComparisonExpression::LTE:
+        case Expr\ComparisonExpression::LTE:
             return $field . Literals::L_COLON . Literals::L_LE . Literals::L_COLON . $value;
         default:
             throw new \RuntimeException(sprintf('Unknown Operator[%s] for ComparisonExpression.', (string)$textComparison->getOperator()));
@@ -130,32 +130,32 @@ class ExpressionVisitor extends BaseVisitor
         }
     }
 
-    public function visitTextComparisonExpression(Part\TextComparisonExpression $textComparison)
+    public function visitTextComparisonExpression(Expr\TextComparisonExpression $textComparison)
     {
         $field = $expr->getField();
         $value = $this->visitValueIdentifier($textComparison->getValue());
 
         switch($textComparison->getOperator()) {
-        case Part\TextComparisonExpression::MATCH:
-        case Part\TextComparisonExpression::CONTAIN:
+        case Expr\TextComparisonExpression::MATCH:
+        case Expr\TextComparisonExpression::CONTAIN:
             return $field . Literals::L_COLON . Literals::L_MATCH . Literals::L_COLON . $value;
-        case Part\TextComparisonExpression::NOT_MATCH:
-        case Part\TextComparisonExpression::NOT_CONTAIN:
+        case Expr\TextComparisonExpression::NOT_MATCH:
+        case Expr\TextComparisonExpression::NOT_CONTAIN:
             return $field . Literals::L_COLON . Literals::L_NOT_MATCH . Literals::L_COLON . $value;
         default:
             throw new \RuntimeException(sprintf('Unknown Operator[%s] for TextComparisonExpression.', (string)$textComparison->getOperator()));
         }
     }
 
-    public function visitCollectionComparisonExpression(Part\CollectionComparisonExpression $comparison)
+    public function visitCollectionComparisonExpression(Expr\CollectionComparisonExpression $comparison)
     {
         $field = $expr->getField();
         $value = (array)$this->visitValueIdentifier($comparison->getValue());
 
         switch($comparison->getOperator()) {
-        case Part\CollectionComparisonExpression::IN:
+        case Expr\CollectionComparisonExpression::IN:
             return $field . Literals::L_COLON . Literals::L_IN . Literals::L_COLON . Literals::L_BRANCKET_OPEN . implode(Literals::L_COMMA, $value) . Literals::L_BRANCKET_CLOSE;
-        case Part\CollectionComparisonExpression::NOT_IN:
+        case Expr\CollectionComparisonExpression::NOT_IN:
             return $field . Literals::L_COLON . Literals::L_NOT_IN . Literals::L_COLON . Literals::L_BRANCKET_OPEN . implode(Literals::L_COMMA, $value) . Literals::L_BRANCKET_CLOSE;
         default:
             throw new \RuntimeException();
@@ -177,11 +177,11 @@ class ExpressionVisitor extends BaseVisitor
     /**
      * visitValueIdentifier 
      * 
-     * @param Part\ValueIdentifier $expr 
+     * @param Expr\ValueIdentifier $expr 
      * @access public
      * @return void
      */
-    public function visitValueIdentifier(Part\ValueIdentifier $expr)
+    public function visitValueIdentifier(Expr\ValueIdentifier $expr)
     {
         return Literals::escape($expr->getValue());
     }

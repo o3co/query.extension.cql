@@ -60,7 +60,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 
 	public function parseConditionalClause($lexer)
 	{
-		$expr = $this->parseExpression($lexer);
+		$expr = $this->doParseExpression($lexer);
 		return new Term\ConditionalClause(array($expr));
 	}
 
@@ -118,7 +118,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 			
             $field = new Term\FieldIdentifier($fieldName);
             try {
-			    $expr = $this->parseExpression($lexer, $field);
+			    $expr = $this->doParseExpression($lexer, $field);
             } catch(\Exception $ex) {
                 throw new ParserException(sprintf('Failed to parse qeury "%s"', $query), 0, $ex);
             }
@@ -143,7 +143,14 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 		throw new ParserException('Invalid Fql query.');
 	}
 
-	protected function parseExpression(Lexer $lexer, Term\FieldIdentifier $field = null, $eqWithNoOp = true)
+    public function parseConditionalExpression($query)
+    {
+        $lexer = $this->createLexer($query);
+
+        return $this->doParseExpression($lexer, null, true);
+    }
+
+	protected function doParseExpression(Lexer $lexer, Term\FieldIdentifier $field = null, $eqWithNoOp = true)
 	{
 		if(!$field) {
 			try {
@@ -153,7 +160,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 					$field = $this->parseFieldIdentifier($lexer);
 					$lexer->match(Tokens::T_OPERATOR_SEPARATOR);
 					
-					return $this->parseExpression($lexer, $field, false);
+					return $this->doParseExpression($lexer, $field, false);
 				}
 			} catch(\Exception $ex) {
 				// reset lexer
@@ -219,12 +226,12 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
             switch(true) {
             case $lexer->isNextToken(Tokens::T_LOGICAL_OP):
                 // parse next level first
-                $exprs[] = $this->parseExpression($lexer, $field);
+                $exprs[] = $this->doParseExpression($lexer, $field);
                 break;
             default:
 			    $literals = $lexer->until(array(Tokens::T_COMPOSITE_END, Tokens::T_COMPOSITE_SEPARATOR));
                 
-			    $exprs[] = $this->parseExpression($this->createLexer($literals, $lexer->getLiterals()), $field);
+			    $exprs[] = $this->doParseExpression($this->createLexer($literals, $lexer->getLiterals()), $field);
 
 			    if($lexer->isNextToken(Tokens::T_COMPOSITE_SEPARATOR)) {
 			    	$lexer->match(Tokens::T_COMPOSITE_SEPARATOR);

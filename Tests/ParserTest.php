@@ -153,7 +153,7 @@ class ParserTest extends \PHPUnit_Framework_TestCase
         $query = $parser->parse('q=domain.field:=:foo&order=-field');
         $this->assertInstanceof('O3Co\Query\Query', $query);
         $stmt = $query->getStatement();
-        $this->assertInstanceof('O3Co\Query\Query\Part\Statement', $stmt);
+        $this->assertInstanceof('O3Co\Query\Query\Expr\Statement', $stmt);
 
         $expr = $stmt->getClause('condition')->getParts()[0];
         $this->assertEquals('foo', $expr->getValue()->getValue());
@@ -165,7 +165,7 @@ class ParserTest extends \PHPUnit_Framework_TestCase
         $query = $parser->parse('q=and:(domain.field:=:foo bar:!=:bar)');
         $this->assertInstanceof('O3Co\Query\Query', $query);
         $stmt = $query->getStatement();
-        $this->assertInstanceof('O3Co\Query\Query\Part\Statement', $stmt);
+        $this->assertInstanceof('O3Co\Query\Query\Expr\Statement', $stmt);
 
         $exprs = $stmt->getClause('condition')->getParts();
         $this->assertCount(1, $exprs);

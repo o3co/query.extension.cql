@@ -32,7 +32,7 @@ class ExpressionVisitor extends BaseVisitor
         return $query;
     }
 
-    public function visitStatement(Part\Statement $statement)
+    public function visitStatement(Expr\Statement $statement)
     {
         $this->reset();
 

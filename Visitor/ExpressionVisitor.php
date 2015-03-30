@@ -43,11 +43,11 @@ class ExpressionVisitor extends BaseVisitor
 
     public function visitConditionalClause(Expr\ConditionalClause $clause)
     {
-        foreach($clause->getParts() as $term) {
-            $terms[] = $term->dispatch($this);
+        foreach($clause->getParts() as $part) {
+            $parts[] = $part->dispatch($this);
         }
 
-        return implode(' ', $terms);
+        return implode(' ', $parts);
     }
 
     public function visitOrderClause(Expr\OrderClause $clause)

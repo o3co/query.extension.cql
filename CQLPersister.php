@@ -10,10 +10,10 @@ use O3Co\Query\Extension\CQL\Visitor\ExpressionVisitor as CqlExpressionVisitor;
  *   CQLPersister is a HttpPersister with CQL ExpressonVisitor 
  *   
  * @uses HttpPersister
- * @package { PACKAGE }
+ * @package \O3Co\Query
  * @copyright Copyrights (c) 1o1.co.jp, All Rights Reserved.
  * @author Yoshi<yoshi@1o1.co.jp> 
- * @license { LICENSE }
+ * @license MIT
  */
 class CQLPersister extends HttpPersister 
 {

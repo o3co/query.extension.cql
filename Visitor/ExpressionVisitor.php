@@ -3,7 +3,7 @@ namespace O3Co\Query\Extension\CQL\Visitor;
 
 use O3Co\Query\Query\Visitor\ExpressionVisitor as BaseVisitor;
 use O3Co\Query\Extension\CQL\Literals;
-use O3Co\Query\Query\Part;
+use O3Co\Query\Query\Expr;
 
 /**
  * ExpressionVisitor 

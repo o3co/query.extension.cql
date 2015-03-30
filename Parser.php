@@ -2,7 +2,7 @@
 namespace O3Co\Query\Extension\CQL;
 
 use O3Co\Query\Extension\Http\AbstractParser as AbstractHttpParser; 
-use O3Co\Query\Query\Part;
+use O3Co\Query\Query\Expr;
 use O3Co\Query\Parser as ParserInterface, 
     O3Co\Query\Fql\Parser as FqlParserInterface
 ;

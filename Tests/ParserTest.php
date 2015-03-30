@@ -3,9 +3,9 @@ namespace O3Co\Query\Extension\CQL\Tests;
 
 use O3Co\Query\Extension\CQL\Parser;
 
-use O3Co\Query\Query\Part\ComparisonExpression;
-use O3Co\Query\Query\Part\TextComparisonExpression;
-use O3Co\Query\Query\Part\CollectionComparisonExpression;
+use O3Co\Query\Query\Expr\ComparisonExpression;
+use O3Co\Query\Query\Expr\TextComparisonExpression;
+use O3Co\Query\Query\Expr\CollectionComparisonExpression;
 
 class ParserTest extends \PHPUnit_Framework_TestCase 
 {

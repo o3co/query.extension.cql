@@ -4,7 +4,7 @@ namespace O3Co\Query\Extension\CQL;
 /**
  * Lexer 
  *    
- * @package { PACKAGE }
+ * @package \O3Co\Query
  * @copyright { COPYRIGHT } (c) { COMPANY }
  * @author Yoshi Aoki <yoshi@44services.jp> 
  * @license MIT

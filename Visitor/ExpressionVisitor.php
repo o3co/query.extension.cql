@@ -21,43 +21,43 @@ class ExpressionVisitor extends BaseVisitor
     // PHP_QUERY_RFC1738 or PHP_QUERY_RFC3986
     private $encType = PHP_QUERY_RFC1738;
 
-	public function getNativeQuery(array $options = array())
-	{
-		$query = http_build_query($this->queryComponents, null, null, $this->encType);
+    public function getNativeQuery(array $options = array())
+    {
+        $query = http_build_query($this->queryComponents, null, null, $this->encType);
 
         if(isset($options['urlencode']) && !$options['urlencode']) {
             return urldecode($query);
         }
 
         return $query;
-	}
+    }
 
-	public function visitStatement(Term\Statement $statement)
-	{
+    public function visitStatement(Term\Statement $statement)
+    {
         $this->reset();
 
-		// apply
+        // apply
         $this->queryComponents['q'] = $this->visitConditionalClause($statement->getClause('condition'));
         $this->queryComponents['order'] = $this->visitOrderClause($statement->getClause('order'));
-	}
+    }
 
-	public function visitConditionalClause(Term\ConditionalClause $clause)
-	{
-		foreach($clause->getTerms() as $term) {
-			$terms[] = $term->dispatch($this);
-		}
+    public function visitConditionalClause(Term\ConditionalClause $clause)
+    {
+        foreach($clause->getTerms() as $term) {
+            $terms[] = $term->dispatch($this);
+        }
 
         return implode(' ', $terms);
-	}
+    }
 
-	public function visitOrderClause(Term\OrderClause $clause)
-	{
+    public function visitOrderClause(Term\OrderClause $clause)
+    {
         $exprs = array();
         foreach($clause->getExpressions() as $expr) {
             $exprs[] = $this->visitOrderExpression();
         }
         return implode(',', $exprs);
-	}
+    }
     
     /**
      * visitLogicalExpression 

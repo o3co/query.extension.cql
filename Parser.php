@@ -2,7 +2,7 @@
 namespace O3Co\Query\Extension\CQL;
 
 use O3Co\Query\Extension\Http\AbstractParser as AbstractHttpParser; 
-use O3Co\Query\Query\Term;
+use O3Co\Query\Query\Expr;
 use O3Co\Query\Parser as ParserInterface, 
     O3Co\Query\Fql\Parser as FqlParserInterface
 ;
@@ -50,18 +50,18 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 
     public function parseLimitClause($lexer)
     {
-        return new Term\LimitClause($this->parseValueExpresion($lexer));
+        return new Expr\LimitClause($this->parseValueExpresion($lexer));
     }
 
     public function parseOffsetClause($lexer)
     {
-        return new Term\OffsetClause($this->parseValueExpresion($lexer));
+        return new Expr\OffsetClause($this->parseValueExpresion($lexer));
     }
 
     public function parseConditionalClause($lexer)
     {
         $expr = $this->doParseExpression($lexer);
-        return new Term\ConditionalClause(array($expr));
+        return new Expr\ConditionalClause(array($expr));
     }
 
     public function parseOrderClause(Lexer $lexer)
@@ -72,20 +72,20 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
             $orders[] = $this->parseOrderExpression($this->createLexer($lexer->until(array(Tokens::T_SORT_SEPARATOR, Tokens::T_END))));
         } while(!$lexer->isEol());
 
-        return new Term\OrderClause($orders);
+        return new Expr\OrderClause($orders);
     }
 
     public function parseOrderExpression(Lexer $lexer)
     {
-        $operator = Term\OrderExpression::ORDER_ASCENDING;
+        $operator = Expr\OrderExpression::ORDER_ASCENDING;
         switch(true) {
         case $lexer->isNextToken(Tokens::T_SORT_ASC):
             $lexer->match(Tokens::T_SORT_ASC);
-            $operator = Term\OrderExpression::ORDER_ASCENDING;
+            $operator = Expr\OrderExpression::ORDER_ASCENDING;
             break;
         case $lexer->isNextToken(Tokens::T_SORT_DESC):
             $lexer->match(Tokens::T_SORT_DESC);
-            $operator = Term\OrderExpression::ORDER_DESCENDING;
+            $operator = Expr\OrderExpression::ORDER_DESCENDING;
             break;
         default: 
             // ORDER_ASCENDING
@@ -99,7 +99,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 
         $field = $this->parseFieldIdentifier($lexer);
 
-        return new Term\OrderExpression($field, $operator);
+        return new Expr\OrderExpression($field, $operator);
     }
 
     /**
@@ -116,7 +116,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
             // 
             $lexer = $this->createLexer((string)$query);
             
-            $field = new Term\FieldIdentifier($fieldName);
+            $field = new Expr\FieldIdentifier($fieldName);
             try {
                 $expr = $this->doParseExpression($lexer, $field);
             } catch(\Exception $ex) {
@@ -135,9 +135,9 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
             }
 
             //return new Expr\AndX($exprs);
-            return new Term\LogicalExpression($exprs, Term\LogicalExpression::TYPE_AND);
+            return new Expr\LogicalExpression($exprs, Expr\LogicalExpression::TYPE_AND);
         } else {
-            return new Term\ComparisonExpression($field, $query, Term\ComparisonExpression::EQ);
+            return new Expr\ComparisonExpression($field, $query, Expr\ComparisonExpression::EQ);
         }
 
         throw new ParserException('Invalid Fql query.');
@@ -150,7 +150,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
         return $this->doParseExpression($lexer, null, true);
     }
 
-    protected function doParseExpression(Lexer $lexer, Term\FieldIdentifier $field = null, $eqWithNoOp = true)
+    protected function doParseExpression(Lexer $lexer, Expr\FieldIdentifier $field = null, $eqWithNoOp = true)
     {
         if(!$field) {
             try {
@@ -177,7 +177,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
             return $this->parseComparisonExpression($lexer, $field);
         } else if($field) {
             if($eqWithNoOp) {
-                return new Term\ComparisonExpression($field, $this->parseValueIdentifier($lexer), Term\ComparisonExpression::EQ);
+                return new Expr\ComparisonExpression($field, $this->parseValueIdentifier($lexer), Expr\ComparisonExpression::EQ);
             }
             throw new \InvalidArgumentException(sprintf('Invalid format query "%s"', $lexer->getValue()));
         } else {
@@ -185,20 +185,20 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
         }
     }
 
-    protected function parseLogicalExpression($lexer, Term\FieldIdentifier $field = null)
+    protected function parseLogicalExpression($lexer, Expr\FieldIdentifier $field = null)
     {
         if($lexer->isNextToken(Tokens::T_AND)) {
             $lexer->match(Tokens::T_AND);
             $lexer->match(Tokens::T_OPERATOR_SEPARATOR);
             $exprs = $this->parseCompositeExpression($lexer, $field);
-            return new Term\LogicalExpression($exprs, Term\LogicalExpression::TYPE_AND);
+            return new Expr\LogicalExpression($exprs, Expr\LogicalExpression::TYPE_AND);
             break;
         } else if($lexer->isNextToken(Tokens::T_OR)) {
             $lexer->match(Tokens::T_OR);
             $lexer->match(Tokens::T_OPERATOR_SEPARATOR);
             $exprs = $this->parseCompositeExpression($lexer, $field);
             //return new Expr\OrX($exprs);
-            return new Term\LogicalExpression($exprs, Term\LogicalExpression::TYPE_OR);
+            return new Expr\LogicalExpression($exprs, Expr\LogicalExpression::TYPE_OR);
             break;
         } else if($lexer->isNextToken(Tokens::T_NOT)) {
             $lexer->match(Tokens::T_NOT);
@@ -209,14 +209,14 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
             }
 
             //return new Expr\Not($exprs[0]);
-            return new Term\LogicalExpression($exprs, Term\LogicalExpression::TYPE_NOT);
+            return new Expr\LogicalExpression($exprs, Expr\LogicalExpression::TYPE_NOT);
             break;
         } else {
             throw new \InvalidArgumentException('Invalid call or parseLogicalExpression.');
         }
     }
 
-    protected function parseCompositeExpression($lexer, Term\FieldIdentifier $field = null)
+    protected function parseCompositeExpression($lexer, Expr\FieldIdentifier $field = null)
     {
         $lexer->match(Tokens::T_COMPOSITE_BEGIN);
         $depth = 1;
@@ -274,14 +274,14 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
         $lexer->match($operator);
 
         if((Tokens::T_IS_ANY == $operator) || (Tokens::T_IS_NULL == $operator)) {
-            return new Term\ComparisonExpression($field, new Term\ValueIdentifier(null), $this->convertTokenToComparisonOp($operator));
+            return new Expr\ComparisonExpression($field, new Expr\ValueIdentifier(null), $this->convertTokenToComparisonOp($operator));
         }
         // parse expression values 
         $lexer->match(Tokens::T_OPERATOR_SEPARATOR);
 
         if(Tokens::T_IN == $operator) {
             // following should be collectionExpression
-            return new Term\CollectionComparisonExpression($field, new Term\ValueIdentifier($this->parseCollection($lexer)), Term\CollectionComparisonExpression::IN);
+            return new Expr\CollectionComparisonExpression($field, new Expr\ValueIdentifier($this->parseCollection($lexer)), Expr\CollectionComparisonExpression::IN);
         } else if(Tokens::T_RANGE == $operator) {
 
             // following should be rangeExpression
@@ -298,14 +298,14 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
         case Tokens::T_GE:
         case Tokens::T_LT:
         case Tokens::T_LE:
-            return new Term\ComparisonExpression($field, $value, $this->convertTokenToComparisonOp($operator));
+            return new Expr\ComparisonExpression($field, $value, $this->convertTokenToComparisonOp($operator));
             break;
         case Tokens::T_MATCH:
             // contains wildcard
             if((false !== strpos($value->getValue(), '.')) || (false !== strpos($value->getValue(), '*'))) {
-                return new Term\TextComparisonExpression($field, $value, Term\TextComparisonExpression::MATCH);
+                return new Expr\TextComparisonExpression($field, $value, Expr\TextComparisonExpression::MATCH);
             } else {
-                return new Term\TextComparisonExpression($field, $value, Term\TextComparisonExpression::CONTAIN);
+                return new Expr\TextComparisonExpression($field, $value, Expr\TextComparisonExpression::CONTAIN);
             }
             break;
         default:
@@ -315,7 +315,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
 
     protected function parseValueIdentifier(Lexer $lexer)
     {
-        return new Term\ValueIdentifier($this->parseLiteral($lexer));
+        return new Expr\ValueIdentifier($this->parseLiteral($lexer));
     }
 
     protected function parseLiteral(Lexer $lexer, array $until = array())
@@ -339,7 +339,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
         }
 
         $value = $this->parseLiteral($lexer, array(Tokens::T_RANGE_SEPARATOR));
-        $min = new Term\ComparisonExpression($field, new Term\ValueIdentifier($value), $this->convertTokenToComparisonOp($op)); 
+        $min = new Expr\ComparisonExpression($field, new Expr\ValueIdentifier($value), $this->convertTokenToComparisonOp($op)); 
 
         $lexer->match(Tokens::T_RANGE_SEPARATOR);
 
@@ -355,9 +355,9 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
             throw new \Exception('Parser error');
         }
 
-        $max = new Term\ComparisonExpression($field, new Term\ValueIdentifier($value), $this->convertTokenToComparisonOp($op));
+        $max = new Expr\ComparisonExpression($field, new Expr\ValueIdentifier($value), $this->convertTokenToComparisonOp($op));
 
-        return new Term\RangeExpression($field, $min, $max);
+        return new Expr\RangeExpression($field, $min, $max);
     }
 
     protected function parseCollection(Lexer $lexer)
@@ -400,23 +400,23 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
         switch($token) {
         case Tokens::T_EQ:
         case Tokens::T_IS_NULL:
-            $op = Term\ComparisonExpression::EQ;
+            $op = Expr\ComparisonExpression::EQ;
             break;
         case Tokens::T_NE:
         case Tokens::T_IS_ANY:
-            $op = Term\ComparisonExpression::NEQ;
+            $op = Expr\ComparisonExpression::NEQ;
             break;
         case Tokens::T_GT:
-            $op = Term\ComparisonExpression::GT;
+            $op = Expr\ComparisonExpression::GT;
             break;
         case Tokens::T_GE:
-            $op = Term\ComparisonExpression::GTE;
+            $op = Expr\ComparisonExpression::GTE;
             break;
         case Tokens::T_LT:
-            $op = Term\ComparisonExpression::LT;
+            $op = Expr\ComparisonExpression::LT;
             break;
         case Tokens::T_LE:
-            $op = Term\ComparisonExpression::LTE;
+            $op = Expr\ComparisonExpression::LTE;
             break;
         default:
             throw new \Exception('invalid');
@@ -435,7 +435,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
             }
         }
 
-        return new Term\FieldIdentifier(implode('.', $domain));
+        return new Expr\FieldIdentifier(implode('.', $domain));
     }
 
     public function createLexer($query)

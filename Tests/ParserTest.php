@@ -150,35 +150,33 @@ class ParserTest extends \PHPUnit_Framework_TestCase
         $parser = new Parser(); 
 
         // Test Simple Value fql
-        $query = $parser->parse('q=domain.field:=:foo&order=-field');
+        $query = $parser->parse('q=' . urlencode('domain.field:=:foo') . '&order=' . urlencode('-field'));
         $this->assertInstanceof('O3Co\Query\Query', $query);
         $stmt = $query->getStatement();
         $this->assertInstanceof('O3Co\Query\Query\Expr\Statement', $stmt);
 
-        $expr = $stmt->getClause('condition')->getParts()[0];
+        $expr = $stmt->getClause('condition')->getExpression();
         $this->assertEquals('foo', $expr->getValue()->getValue());
         $this->assertEquals('domain.field', $expr->getField()->getName());
         $this->assertEquals(ComparisonExpression::EQ, $expr->getOperator());
 
 
         // Complex Query
-        $query = $parser->parse('q=and:(domain.field:=:foo bar:!=:bar)');
+        $query = $parser->parse('q=' . urlencode('and:(domain.field:=:foo bar:!=:bar)'));
         $this->assertInstanceof('O3Co\Query\Query', $query);
         $stmt = $query->getStatement();
         $this->assertInstanceof('O3Co\Query\Query\Expr\Statement', $stmt);
 
-        $exprs = $stmt->getClause('condition')->getParts();
-        $this->assertCount(1, $exprs);
-
-        $this->assertInstanceof('O3Co\Query\Query\Expr\LogicalExpression', $exprs[0]);
+        $rootExpr = $stmt->getClause('condition')->getExpression();
+        $this->assertInstanceof('O3Co\Query\Query\Expr\LogicalExpression', $rootExpr);
             
-        $expr = $exprs[0]->getParts()[0];
+        $expr = $rootExpr->getExpressions()[0];
         $this->assertInstanceof('O3Co\Query\Query\Expr\ComparisonExpression', $expr);
         $this->assertEquals('domain.field', $expr->getField()->getName());
         $this->assertEquals('foo', $expr->getValue()->getValue());
         $this->assertEquals(ComparisonExpression::EQ, $expr->getOperator());
 
-        $expr = $exprs[0]->getParts()[1];
+        $expr = $rootExpr->getExpressions()[1];
         $this->assertInstanceof('O3Co\Query\Query\Expr\ComparisonExpression', $expr);
         $this->assertEquals('bar', $expr->getField()->getName());
         $this->assertEquals('bar', $expr->getValue()->getValue());

@@ -61,7 +61,7 @@ class Parser extends AbstractHttpParser implements ParserInterface, FQLParserInt
     public function parseConditionalClause($lexer)
     {
         $expr = $this->doParseExpression($lexer);
-        return new Expr\ConditionalClause(array($expr));
+        return new Expr\ConditionalClause($expr);
     }
 
     public function parseOrderClause(Lexer $lexer)

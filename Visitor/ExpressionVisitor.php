@@ -1,7 +1,7 @@
 <?php
 namespace O3Co\Query\Extension\CQL\Visitor;
 
-use O3Co\Query\Query\Visitor\ExpressionVisitor as BaseVisitor;
+use O3Co\Query\Extension\Http\Visitor\ExpressionVisitor as BaseVisitor;
 use O3Co\Query\Extension\CQL\Literals;
 use O3Co\Query\Query\Expr;
 
@@ -16,28 +16,12 @@ use O3Co\Query\Query\Expr;
  */
 class ExpressionVisitor extends BaseVisitor
 {
-    private $queryComponents = array();
-
-    // PHP_QUERY_RFC1738 or PHP_QUERY_RFC3986
-    private $encType = PHP_QUERY_RFC1738;
-
-    public function getNativeQuery(array $options = array())
-    {
-        $query = http_build_query($this->queryComponents, null, null, $this->encType);
-
-        if(isset($options['urlencode']) && !$options['urlencode']) {
-            return urldecode($query);
-        }
-
-        return $query;
-    }
-
     public function visitStatement(Expr\Statement $statement)
     {
         $this->reset();
 
         // apply
-        $this->queryComponents['q'] = $this->visitConditionalClause($statement->getClause('condition'));
+        $this->queryComponents['query'] = $this->visitConditionalClause($statement->getClause('condition'));
 
         if($statement->hasClause('order')) {
             $this->queryComponents['order'] = $this->visitOrderClause($statement->getClause('order'));
@@ -57,9 +41,18 @@ class ExpressionVisitor extends BaseVisitor
     {
         $exprs = array();
         foreach($clause->getExpressions() as $expr) {
-            $exprs[] = $this->visitOrderExpression();
+            $exprs[] = $this->visitOrderExpression($expr);
         }
         return implode(',', $exprs);
+    }
+
+    public function visitOrderExpression(Expr\OrderExpression$expr)
+    {
+        if($expr->isAsc()) {
+            return Literals::L_PLUS . $this->visitField($expr->getField());
+        } else {
+            return Literals::L_MINUS . $this->visitField($expr->getField());
+        }
     }
     
     /**
@@ -187,31 +180,6 @@ class ExpressionVisitor extends BaseVisitor
     public function visitValueIdentifier(Expr\ValueIdentifier $expr)
     {
         return Literals::escape($expr->getValue());
-    }
-
-    /**
-     * setQueryComponent 
-     * 
-     * @param mixed $key 
-     * @param mixed $value 
-     * @access public
-     * @return void
-     */
-    public function setQueryComponent($key, $value)
-    {
-        $this->queryComponents[$key] = $value;
-    }
-
-    /**
-     * getQueryComponent 
-     * 
-     * @param mixed $key 
-     * @access public
-     * @return void
-     */
-    public function getQueryComponent($key)
-    {
-        return $this->queryComponent[$key];
     }
 }
 

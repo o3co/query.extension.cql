@@ -2,6 +2,7 @@
 namespace O3Co\Query\Extension\CQL;
 
 use O3Co\Query\Query\SimpleQueryBuilder;
+use O3Co\Query\Extension\Http\Client;
 
 /**
  * QueryBuilder 
@@ -15,9 +16,9 @@ use O3Co\Query\Query\SimpleQueryBuilder;
  */
 class QueryBuilder extends SimpleQueryBuilder 
 {
-    public function __construct()
+    public function __construct(Client $client = null)
     {
-        parent::__construct(new CQLPersister());
+        parent::__construct(new CQLPersister($client));
     }
 }
 

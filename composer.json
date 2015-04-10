@@ -12,6 +12,9 @@
 		"o3co/query-core": "~0.2",
 		"o3co/query-extension-http": "~0.2"
 	},
+	"require-dev" : {
+		"o3co/query-bridge-guzzlehttp": "~0.2"
+	},
 	"autoload": {
 		"psr-4": {
 			"O3Co\\Query\\Extension\\CQL\\": ""

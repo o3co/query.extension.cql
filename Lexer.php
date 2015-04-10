@@ -294,9 +294,6 @@ class Lexer
         }
 
         if($this->pos > $this->len) {
-            var_dump($this->value, $this->pos, $this->len, $startAt);
-            var_dump($tokens);
-
             throw new \InvalidArgumentException('EOL reached.');
         }
 

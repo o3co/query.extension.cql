@@ -38,7 +38,10 @@ class ExpressionVisitor extends BaseVisitor
 
         // apply
         $this->queryComponents['q'] = $this->visitConditionalClause($statement->getClause('condition'));
-        $this->queryComponents['order'] = $this->visitOrderClause($statement->getClause('order'));
+
+        if($statement->hasClause('order')) {
+            $this->queryComponents['order'] = $this->visitOrderClause($statement->getClause('order'));
+        }
     }
 
     public function visitConditionalClause(Expr\ConditionalClause $clause)
@@ -184,6 +187,31 @@ class ExpressionVisitor extends BaseVisitor
     public function visitValueIdentifier(Expr\ValueIdentifier $expr)
     {
         return Literals::escape($expr->getValue());
+    }
+
+    /**
+     * setQueryComponent 
+     * 
+     * @param mixed $key 
+     * @param mixed $value 
+     * @access public
+     * @return void
+     */
+    public function setQueryComponent($key, $value)
+    {
+        $this->queryComponents[$key] = $value;
+    }
+
+    /**
+     * getQueryComponent 
+     * 
+     * @param mixed $key 
+     * @access public
+     * @return void
+     */
+    public function getQueryComponent($key)
+    {
+        return $this->queryComponent[$key];
     }
 }
 

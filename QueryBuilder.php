@@ -16,6 +16,13 @@ use O3Co\Query\Extension\Http\Client;
  */
 class QueryBuilder extends SimpleQueryBuilder 
 {
+    /**
+     * __construct 
+     * 
+     * @param Client $client 
+     * @access public
+     * @return void
+     */
     public function __construct(Client $client = null)
     {
         parent::__construct(new CQLPersister($client));

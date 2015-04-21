@@ -20,9 +20,12 @@ class ExpressionVisitor extends BaseVisitor
     {
         $this->reset();
 
-        // apply
-        $this->queryComponents['query'] = $this->visitConditionalClause($statement->getClause('condition'));
+        // apply condition 
+        if($statement->hasClause('condition')) {
+            $this->queryComponents['query'] = $this->visitConditionalClause($statement->getClause('condition'));
+        }
 
+        // apply order
         if($statement->hasClause('order')) {
             $this->queryComponents['order'] = $this->visitOrderClause($statement->getClause('order'));
         }
